@@ -20,55 +20,37 @@ const renderCountry = function (data, className = '') {
     countriesContainer.style.opacity = 1
 }
 
-const getPosition = function () {
+// Get Navigator Geoposition
+const getPosition = async function () {
     return new Promise((resolve, reject) => {
-        // navigator.geolocation.getCurrentPosition(
-        //     (position) => resolve(position),
-        //     (err) => reject(err)
-        // )
         navigator.geolocation.getCurrentPosition(resolve, reject)
     })
 }
 
-const whereAmI = function () {
-    getPosition()
-        .then((position) => {
-            // console.log(position.coords)
-            const { latitude, longitude } = position.coords
+const whereAmI = async function () {
+    try {
+        // Get Postion
+        const position = await getPosition()
+        const { latitude, longitude } = position.coords
 
-            return fetch(`https://geocode.xyz/${latitude.toFixed(6)},${longitude.toFixed(6)}?json=1`)
-        })
-        .then((response) => {
-            if (!response.ok) throw new Error(`Problem with geocoding api ${response.status}`)
+        // Reverse geolocation
+        const responseGeo = await fetch(`https://geocode.xyz/${latitude.toFixed(6)},${longitude.toFixed(6)}?json=1`)
+        const dataGeo = await responseGeo.json()
+        console.log(`You are in ${dataGeo.city}, ${dataGeo.country}`)
 
-            return response.json()
-        })
-        .then((data) => {
-            console.log(`You are in ${data.city}, ${data.country}`)
+        // Country Data
+        const responseCountry = await fetch(`https://restcountries.eu/rest/v2/name/${dataGeo.country}`)
+        const [dataCountry] = await responseCountry.json()
+        renderCountry(dataCountry)
 
-            return fetch(`https://restcountries.eu/rest/v2/name/${data.country}`)
-        })
-        .then((response) => {
-            if (!response.ok) throw new Error(`Country not found (${response.status})`)
-
-            return response.json()
-        })
-        .then((data) => {
-            renderCountry(data[0])
-
-            const neighbour = data[0].borders[0]
-
-            if (!neighbour) throw new Error('No neighbour found!')
-
-            // Country 2 (Neighbour)
-            return fetch(`https://restcountries.eu/rest/v2/alpha/${neighbour}`)
-        })
-        .then((response) => {
-            return response.json()
-        })
-        .then((data) => renderCountry(data, 'neighbour'))
-
-        .catch((err) => console.error(`${err.message} 💥`))
+        // Country 2 (Neighbour)
+        const [neighbour] = dataCountry.borders
+        const responseNeighbour = await fetch(`https://restcountries.eu/rest/v2/alpha/${neighbour}`)
+        const dataNeighbour = await responseNeighbour.json()
+        renderCountry(dataNeighbour, 'neighbour')
+    } catch (err) {
+        console.log(`Something went wrong. ${err.message}`)
+    }
 }
 
 btn.addEventListener('click', whereAmI)
