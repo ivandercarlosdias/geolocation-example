@@ -39,7 +39,7 @@ const whereAmI = function () {
             return fetch(`https://geocode.xyz/${latitude.toFixed(6)},${longitude.toFixed(6)}?json=1`)
         })
         .then((response) => {
-            if (!response.ok) throw new Error(`Problem with geocoding ${response.status}`)
+            if (!response.ok) throw new Error(`Problem with geocoding api ${response.status}`)
 
             return response.json()
         })
