@@ -35,16 +35,19 @@ const whereAmI = async function () {
 
         // Reverse geolocation
         const responseGeo = await fetch(`https://geocode.xyz/${latitude.toFixed(6)},${longitude.toFixed(6)}?json=1`)
+        // Error: Problem with geocoding api
         const dataGeo = await responseGeo.json()
         console.log(`You are in ${dataGeo.city}, ${dataGeo.country}`)
 
         // Country Data
         const responseCountry = await fetch(`https://restcountries.eu/rest/v2/name/${dataGeo.country}`)
+        // Error: Country not found
         const [dataCountry] = await responseCountry.json()
         renderCountry(dataCountry)
 
         // Country 2 (Neighbour)
         const [neighbour] = dataCountry.borders
+        // Error: Neighbour not found
         const responseNeighbour = await fetch(`https://restcountries.eu/rest/v2/alpha/${neighbour}`)
         const dataNeighbour = await responseNeighbour.json()
         renderCountry(dataNeighbour, 'neighbour')
