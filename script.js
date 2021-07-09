@@ -30,6 +30,31 @@ const getPosition = function () {
     })
 }
 
-getPosition()
-    .then((position) => console.log(position))
-    .catch((err) => console.error(err.message))
+const whereAmI = function () {
+    getPosition()
+        .then((position) => {
+            // console.log(position.coords)
+            const { latitude, longitude } = position.coords
+
+            return fetch(`https://geocode.xyz/${latitude},${longitude}?geoit=json`)
+        })
+        .then((response) => {
+            if (!response.ok) throw new Error(`Problem with geocoding ${response.status}`)
+
+            return response.json()
+        })
+        .then((data) => {
+            console.log(`You are in ${data.city}, ${data.country}`)
+
+            return fetch(`https://restcountries.eu/rest/v2/name/${data.country}`)
+        })
+        .then((response) => {
+            if (!response.ok) throw new Error(`Country not found (${response.status})`)
+
+            return response.json()
+        })
+        .then((data) => renderCountry(data[0]))
+        .catch((err) => console.error(`${err.message} 💥`))
+}
+
+btn.addEventListener('click', whereAmI)
