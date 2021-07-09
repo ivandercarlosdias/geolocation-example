@@ -21,7 +21,7 @@ const renderCountry = function (data, className = '') {
 }
 
 // Get Navigator Geoposition
-const getPosition = async function () {
+const getPosition = function () {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject)
     })
