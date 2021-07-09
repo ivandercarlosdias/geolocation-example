@@ -36,7 +36,7 @@ const whereAmI = function () {
             // console.log(position.coords)
             const { latitude, longitude } = position.coords
 
-            return fetch(`https://geocode.xyz/${latitude},${longitude}?geoit=json`)
+            return fetch(`https://geocode.xyz/${latitude.toFixed(6)},${longitude.toFixed(6)}?json=1`)
         })
         .then((response) => {
             if (!response.ok) throw new Error(`Problem with geocoding ${response.status}`)
@@ -53,7 +53,21 @@ const whereAmI = function () {
 
             return response.json()
         })
-        .then((data) => renderCountry(data[0]))
+        .then((data) => {
+            renderCountry(data[0])
+
+            const neighbour = data[0].borders[0]
+
+            if (!neighbour) throw new Error('No neighbour found!')
+
+            // Country 2 (Neighbour)
+            return fetch(`https://restcountries.eu/rest/v2/alpha/${neighbour}`)
+        })
+        .then((response) => {
+            return response.json()
+        })
+        .then((data) => renderCountry(data, 'neighbour'))
+
         .catch((err) => console.error(`${err.message} 💥`))
 }
 
