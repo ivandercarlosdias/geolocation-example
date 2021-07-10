@@ -3,6 +3,7 @@
 const countriesContainer = document.querySelector('.countries')
 const btn = document.querySelector('.btn-country')
 
+// Render countries html
 const renderCountry = function (data, className = '') {
     const html = `
     <article class="country ${className}">
@@ -10,7 +11,7 @@ const renderCountry = function (data, className = '') {
         <div class="country__data">
             <h3 class="country__name">${data.name}</h3>
             <h4 class="country__region">${data.region}</h4>
-            <p class="country__row"><span>👫</span>${(parseInt(data.population) / 1000000).toFixed(1)} people</p>
+            <p class="country__row"><span>👫</span>${(parseInt(data.population) / 1000000).toFixed(1)} mi people</p>
             <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
             <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
         </div>
@@ -34,25 +35,35 @@ const whereAmI = async function () {
         const { latitude, longitude } = position.coords
 
         // Reverse geolocation
-        const responseGeo = await fetch(`https://geocode.xyz/${latitude.toFixed(6)},${longitude.toFixed(6)}?json=1`)
-        // Error: Problem with geocoding api
-        const dataGeo = await responseGeo.json()
-        console.log(`You are in ${dataGeo.city}, ${dataGeo.country}`)
+        const resGeo = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}`
+        )
+        if (!resGeo.ok) throw new Error(`Problem with geocoding api ${resGeo.status}`) // set error
+
+        const dataGeo = await resGeo.json()
+        console.log(`You are in ${dataGeo.city}, ${dataGeo.countryName}`)
 
         // Country Data
-        const responseCountry = await fetch(`https://restcountries.eu/rest/v2/name/${dataGeo.country}`)
-        // Error: Country not found
-        const [dataCountry] = await responseCountry.json()
+        const resCountry = await fetch(`https://restcountries.eu/rest/v2/name/${dataGeo.countryName}`)
+        if (!resCountry.ok) throw new Error(`Country not found (${resCountry.status})`) // set error
+
+        const [dataCountry] = await resCountry.json()
         renderCountry(dataCountry)
 
         // Country 2 (Neighbour)
         const [neighbour] = dataCountry.borders
-        // Error: Neighbour not found
-        const responseNeighbour = await fetch(`https://restcountries.eu/rest/v2/alpha/${neighbour}`)
-        const dataNeighbour = await responseNeighbour.json()
+        if (!neighbour) throw new Error('No neighbour found!') // set error
+
+        const resNeighbour = await fetch(`https://restcountries.eu/rest/v2/alpha/${neighbour}`)
+        if (!resNeighbour.ok) throw new Error(`Country not found (${resNeighbour.status})`) // set error
+
+        const dataNeighbour = await resNeighbour.json()
         renderCountry(dataNeighbour, 'neighbour')
     } catch (err) {
-        console.log(`Something went wrong. ${err.message}`)
+        console.error(`Something went wrong. ${err.message} 💣`)
+    } finally {
+        // Set button to disable
+        btn.disabled = true
     }
 }
 
